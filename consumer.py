@@ -13,6 +13,7 @@
 
 import json
 import time
+import threading
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from kafka import KafkaConsumer
@@ -24,17 +25,9 @@ timestamps = []
 
 # Configuration
 SERVER = 'lab9.alumchat.lol:9092'  # Address of the Kafka server
-TOPIC = '21874'                     # Kafka topic to consume data from
+TOPIC = '21874'  # Kafka topic to consume data from
 
 class Consumer:
-    """
-    A class to represent a Kafka consumer for receiving sensor data.
-    
-    Attributes:
-        consumer (KafkaConsumer): The Kafka consumer instance.
-        topic (str): The Kafka topic from which data will be consumed.
-    """
-
     def __init__(self, server=SERVER, topic=TOPIC):
         """
         Initializes the Kafka consumer with the given server and topic.
@@ -50,13 +43,13 @@ class Consumer:
         self.topic = topic
         self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(10, 6))
         self.ani = FuncAnimation(self.fig, self.update_plots, interval=1000, cache_frame_data=False)
-
-    def run(self):
+        
+    def consume_messages(self):
         """
         Continuously consumes sensor data from the configured Kafka topic.
-        Updates the global lists for plotting.
+        This method runs in a separate thread.
         """
-        print(f"Consuming messages from topic: {self.topic}")
+        print(f"\nConsuming messages from topic: {self.topic}")
 
         try:
             for message in self.consumer:
@@ -67,17 +60,26 @@ class Consumer:
                 print(f"Received data: {sensor_data}")  # Print received sensor data
 
         except KeyboardInterrupt:
-            print("Stopping consumer...")
+            print("\nStopping consumer...")
 
         finally:
-            self.consumer.close()  # Ensure the consumer is closed on exit
+            self.consumer.close()
+
+    def run(self):
+        """
+        Starts the consumer in a separate thread and displays the plot.
+        """
+        # Create and start the consumer thread
+        consumer_thread = threading.Thread(target=self.consume_messages)
+        consumer_thread.daemon = True  # Thread will exit when main program exits
+        consumer_thread.start()
+        
+        # Show the plot (this will block until the window is closed)
+        plt.show()
 
     def update_plots(self, frame):
         """
         Update the plots with the latest sensor data.
-        
-        Args:
-            frame (int): The current frame number (not used in this context).
         """
         # Clear the axes for new data
         self.ax1.clear()
@@ -96,7 +98,11 @@ class Consumer:
         self.ax2.set_xlabel('Time (s)')
         self.ax2.set_ylabel('Humidity (%)')
         self.ax2.legend()
-
+        
         # Adjust layout
         plt.tight_layout()
-        plt.pause(0.1)  # Pause to allow for updates
+
+# Usage
+if __name__ == "__main__":
+    consumer = Consumer()
+    consumer.run()
