@@ -12,6 +12,7 @@
 import json
 from kafka import KafkaProducer
 from time import sleep
+import random
 from data_generator import getSensorData
 
 # Configuration
@@ -56,7 +57,7 @@ class Producer:
         self.producer.send(self.topic, sensor_data)
         print(f"Sent data: {sensor_data}")
 
-    def run(self, interval=TIME_INTERVAL):
+    def run(self):
         """
         Continuously sends sensor data at the specified interval.
         
