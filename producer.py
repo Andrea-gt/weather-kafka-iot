@@ -49,10 +49,8 @@ class Producer:
                 bootstrap_servers=[server],
                 value_serializer=lambda v: json.dumps(v).encode('utf-8'),
                 acks='all',  # Wait for all replicas to acknowledge
-                retries=3,   # Retry failed sends
                 request_timeout_ms=5000  # Timeout for requests
             )
-
             self.topic = topic
             print(f"Successfully connected to Kafka server at {server}")
 
@@ -93,7 +91,7 @@ class Producer:
             min_interval (int): Minimum time between sends in seconds
             max_interval (int): Maximum time between sends in seconds
         """
-        
+
         print(f"\nStarting producer for topic: {self.topic}")
         print(f"Sending interval: {min_interval}-{max_interval} seconds")
         

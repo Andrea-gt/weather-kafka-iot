@@ -17,6 +17,8 @@ import threading
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from kafka import KafkaConsumer
+import signal
+import sys
 
 # Global lists to store data for plotting
 temperatures = []
@@ -43,7 +45,7 @@ class Consumer:
         self.topic = topic
         self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(10, 6))
         self.ani = FuncAnimation(self.fig, self.update_plots, interval=1000, cache_frame_data=False)
-        
+
     def consume_messages(self):
         """
         Continuously consumes sensor data from the configured Kafka topic.
@@ -59,22 +61,25 @@ class Consumer:
                 timestamps.append(time.time())
                 print(f"Received data: {sensor_data}")  # Print received sensor data
 
-        except KeyboardInterrupt:
-            print("\nStopping consumer...")
+        except Exception as e:
+            print(f"\nError in consumer thread: {e}")
 
         finally:
-            self.consumer.close()
+            self.signal_handler()
 
     def run(self):
         """
         Starts the consumer in a separate thread and displays the plot.
         """
+        # Handle KeyboardInterrupt for a clean exit
+        signal.signal(signal.SIGINT, self.signal_handler)
+        
         # Create and start the consumer thread
         consumer_thread = threading.Thread(target=self.consume_messages)
         consumer_thread.daemon = True  # Thread will exit when main program exits
         consumer_thread.start()
         
-        # Show the plot (this will block until the window is closed)
+        # Start the Matplotlib event loop
         plt.show()
 
     def update_plots(self, frame):
@@ -101,6 +106,15 @@ class Consumer:
         
         # Adjust layout
         plt.tight_layout()
+
+    def signal_handler(self, sig, frame):
+        """
+        Handles the interrupt signal and closes the plot window.
+        """
+        print("\nInterrupt received. Closing consumer and plot...")
+        self.consumer.close()
+        plt.close(self.fig)
+        sys.exit(0)
 
 # Usage
 if __name__ == "__main__":
