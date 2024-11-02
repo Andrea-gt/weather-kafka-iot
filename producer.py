@@ -17,7 +17,6 @@ from data_generator import getSensorData
 # Configuration
 SERVER = 'lab9.alumchat.lol:9092'  # Address of the Kafka server
 TOPIC = '21874'                     # Unique Kafka topic to which the data will be published
-TIME_INTERVAL = 15                  # Default time interval (in seconds) between data sends
 
 class Producer:
     """
@@ -72,7 +71,8 @@ class Producer:
         try:
             while True:
                 self.sendData()    # Call the sendData method to send sensor data
-                sleep(interval)    # Wait for the specified interval
+                time_interval = random.randint(15, 30) 
+                sleep(time_interval)    # Wait for the specified interval
 
         except KeyboardInterrupt:
             print("Stopping producer...")  # Graceful exit message on keyboard interrupt
