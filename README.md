@@ -41,7 +41,7 @@ This project consists of a Kafka producer that generates and sends sensor data (
 2. Install the required packages:
 
    ```bash
-   pip install confluent-kafka matplotlib numpy pandas
+   pip install kafka-python matplotlib numpy pandas
    ```
 
 3. Ensure that your Kafka server is running and create a topic if necessary.
