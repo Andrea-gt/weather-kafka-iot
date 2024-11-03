@@ -14,6 +14,19 @@
 # -------------------------------------------------------------
 
 import random
+import struct
+
+# Assign 3-bit binary values for each wind direction
+wind_directions = {
+    "N": 0b000,
+    "NE": 0b001,
+    "E": 0b010,
+    "SE": 0b011,
+    "S": 0b100,
+    "SW": 0b101,
+    "W": 0b110,
+    "NW": 0b111
+}
 
 def getSensorData():
     """
@@ -47,3 +60,26 @@ def getSensorData():
 
     # Return the sensor data dictionary.
     return sensor_data
+
+def encode(data):
+    """
+    Encodes the sensor data into a bytes payload suitable for Kafka.
+    Args:
+        data (dict): Sensor data dictionary with 'temperature', 'humidity', and 'wind_direction'.
+    Returns:
+        bytes: Encoded payload ready for Kafka
+    """
+
+    # Retrieve and encode each sensor reading
+    temperature = int(data["temperature"] * 100) & 0b111111111111  # 12 bits for temperature (0-409.99)
+    humidity = int(data["humidity"]) & 0b1111111                   # 7 bits for humidity
+    wind_direction = wind_directions[data["wind_direction"]]       # 3 bits for wind direction
+
+    # Combine all into a 32-bit payload (4 bytes)
+    payload = (temperature << 20) | (humidity << 13) | (wind_direction << 10)
+
+    # Convert to bytes - big endian ('>I')
+    return struct.pack('>I', payload)
+
+def decode(data):
+    pass
