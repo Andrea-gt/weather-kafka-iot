@@ -82,4 +82,29 @@ def encode(data):
     return struct.pack('>I', payload)
 
 def decode(data):
-    pass
+    """
+    Decodes the bytes payload from Kafka back into sensor data.
+    Args:
+        data (bytes): Encoded payload from Kafka
+    Returns:
+        dict: Decoded sensor data
+    """
+
+    # Unpack bytes back to integer
+    payload = struct.unpack('>I', data)[0]
+    
+    # Extract each value
+    temperature = ((payload >> 20) & 0b111111111111) / 100  # Convert back to float
+    humidity = (payload >> 13) & 0b1111111
+    wind_direction_bits = (payload >> 10) & 0b111
+    
+    # Map back to wind direction
+    wind_directions_ = {value: key for key, value in wind_direction_bits.items()}
+    # Use reverse mapping to get wind direction
+    wind_direction = wind_directions_[wind_direction_bits]
+
+    return {
+        "temperature": round(temperature, 2),
+        "humidity": humidity,
+        "wind_direction": wind_direction
+    }
