@@ -15,7 +15,7 @@ import random
 from time import sleep
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
-from data_generator import getSensorData
+from data_generator import getSensorData, encode
 
 # Configuration
 SERVER = 'lab9.alumchat.lol:9092'  # Address of the Kafka server
@@ -47,7 +47,7 @@ class Producer:
             # Initialize the Kafka producer with additional configuration
             self.producer = KafkaProducer(
                 bootstrap_servers=[server],
-                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                value_serializer=lambda x: x,
                 acks='all',  # Wait for all replicas to acknowledge
                 request_timeout_ms=5000  # Timeout for requests
             )
@@ -66,8 +66,8 @@ class Producer:
             bool: True if send was successful, False otherwise
         """
         try:
-            # Generate sensor data
-            sensor_data = getSensorData()
+            # Generate sensor data and encode it
+            sensor_data = encode(getSensorData())
             # Send the sensor data to the Kafka topic
             future = self.producer.send(self.topic, sensor_data)
             # Wait for the send to complete and check for errors

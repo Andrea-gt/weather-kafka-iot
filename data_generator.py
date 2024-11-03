@@ -99,10 +99,9 @@ def decode(data):
     wind_direction_bits = (payload >> 10) & 0b111
     
     # Map back to wind direction
-    wind_directions_ = {value: key for key, value in wind_direction_bits.items()}
-    # Use reverse mapping to get wind direction
-    wind_direction = wind_directions_[wind_direction_bits]
-
+    directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+    wind_direction = directions[wind_direction_bits]
+    
     return {
         "temperature": round(temperature, 2),
         "humidity": humidity,

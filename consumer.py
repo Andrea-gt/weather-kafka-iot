@@ -17,6 +17,7 @@ import threading
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from kafka import KafkaConsumer
+from data_generator import decode
 import signal
 import sys
 
@@ -37,7 +38,7 @@ class Consumer:
         self.consumer = KafkaConsumer(
             topic,
             bootstrap_servers=[server],
-            value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+            value_deserializer=lambda x: x,
             auto_offset_reset='earliest',
             enable_auto_commit=True,
             group_id='sensor_data_group'
@@ -55,11 +56,12 @@ class Consumer:
 
         try:
             for message in self.consumer:
-                sensor_data = message.value
+                sensor_data = decode(message.value)
                 temperatures.append(sensor_data['temperature'])
                 humidities.append(sensor_data['humidity'])
                 timestamps.append(time.time())
-                print(f"Received data: {sensor_data}")  # Print received sensor data
+                print(f"\nReceived data: {message.value}")  # Print received sensor data
+                print(f"Decoded data: {sensor_data}")  # Print decoded sensor data
 
         except Exception as e:
             print(f"\nError in consumer thread: {e}")
@@ -107,7 +109,7 @@ class Consumer:
         # Adjust layout
         plt.tight_layout()
 
-    def signal_handler(self, sig, frame):
+    def signal_handler(self, sig = None, frame = None):
         """
         Handles the interrupt signal and closes the plot window.
         """
